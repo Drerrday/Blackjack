@@ -93,7 +93,9 @@ def hit(hand):
     total = calculate_hand(hand)
     return card, total
 
-
+def update_win_labels():
+    player_wins_label.config(text=f"Won {player_wins}")
+    dealer_wins_label.config(text=f"Lost {dealer_wins}")
 
 # Create the GUI
 root = tk.Tk()
@@ -102,17 +104,21 @@ root.title("Blackjack")
 # Create the game variables
 player_hand = []
 dealer_hand = []
+player_wins = 0
+dealer_wins = 0
 
 # Create the game labels with custom text colors
 player_label = tk.Label(root, text="Player: {}".format(player_score), fg="blue")
 dealer_label = tk.Label(root, text="Dealer: {}".format(dealer_score), fg="red")
-message_label = tk.Label(root, text="Welcome to Blackjack!", fg="green")
+message_label = tk.Label(root, text="Welcome to Blackjack!", fg="Black", bg="white")
 player_hand_label = tk.Label(root, text="", fg="blue")
 dealer_hand_label = tk.Label(root, text="", fg="red")
+player_wins_label = tk.Label(root, text=f"Won {player_wins}", fg="green", bg="black")
+dealer_wins_label = tk.Label(root, text=f"Lost {dealer_wins}", fg="red", bg="black")
 
 # Define the game functions for the GUI
 def start_game():
-    global player_hand, dealer_hand, player_score, dealer_score
+    global player_hand, dealer_hand, player_score, dealer_score, player_wins, dealer_wins
     # Shuffle the deck
     shuffle_deck()
 
@@ -132,7 +138,7 @@ def start_game():
 
     # Update the scores
     player_label.config(text="Player: {}".format(player_score))
-    dealer_label.config(text="Dealer: {} + ?".format(dealer_score))  # Display partial dealer score
+    dealer_label.config(text="Dealer: {} + hidden".format(dealer_score))  # Display partial dealer score
 
     # Enable the hit and stand buttons
     hit_button.config(state="normal")
@@ -147,6 +153,8 @@ def start_game():
         stand_button.config(state="disabled")
         message_label.config(text="You got Blackjack! You win!")
         win_sound.play()
+        player_wins += 1
+        update_win_labels()
     elif player_score > 21:
         hit_button.config(state="disabled")
         stand_button.config(state="disabled")
@@ -154,9 +162,11 @@ def start_game():
         dealer_label.config(text="Dealer: {}".format(dealer_score))
         message_label.config(text="You bust! Dealer wins!")
         lose_sound.play()
+        dealer_wins += 1
+        update_win_labels()
 
 def hit_player():
-    global player_hand, player_score
+    global player_hand, player_score, player_wins, dealer_wins
     card, total = hit(player_hand)
     player_score = total
     player_hand_label.config(text="\n".join(show_hand(player_hand)))
@@ -166,15 +176,16 @@ def hit_player():
         stand_button.config(state="disabled")
         if player_score == 21:
             message_label.config(text="You got Blackjack! You win!")
-            dealer_turn()
             win_sound.play()
+            player_wins += 1
+            update_win_labels()
         elif player_score > 21:
             dealer_score = calculate_hand(dealer_hand)
             dealer_label.config(text="Dealer: {}".format(dealer_score))
             message_label.config(text="You bust! Dealer wins!")
             lose_sound.play()
-            if dealer_score < 17:
-                dealer_turn()
+            dealer_wins += 1
+            update_win_labels()
 
 def stand_player():
     global player_score
@@ -195,22 +206,30 @@ def dealer_turn():
         finish_dealer_turn()
 
 def finish_dealer_turn():
-    global dealer_hand, dealer_score
+    global dealer_hand, dealer_score, dealer_wins, player_wins
     dealer_hand_label.config(text="\n".join(show_hand(dealer_hand)))  # Reveal the hidden card
     dealer_score = calculate_hand(dealer_hand)  # Update the dealer's total score
     dealer_label.config(text="Dealer: {}".format(dealer_score))  # Update the dealer's score label
     if dealer_score > 21:
         message_label.config(text="Dealer busts! You win!")
         win_sound.play()
+        player_wins += 1
+        update_win_labels()
     elif dealer_score > player_score:
         message_label.config(text="Dealer wins!")
         lose_sound.play()
+        dealer_wins += 1
+        update_win_labels()
     elif dealer_score < player_score:
         message_label.config(text="You win!")
         win_sound.play()
+        player_wins += 1
+        update_win_labels()
     else:
         message_label.config(text="(Tie/Lose) Dealer Wins")
         lose_sound.play()
+        dealer_wins += 1
+        update_win_labels()
     play_again_button.config(state="normal")
 
 def play_again():
@@ -221,22 +240,26 @@ def play_again():
     message_label.config(text="")
 
 # Create the game buttons with custom text colors
-start_button = tk.Button(root, text="Start", command=start_game, fg="purple")
-hit_button = tk.Button(root, text="Hit", command=hit_player, state="disabled", fg="purple")
-stand_button = tk.Button(root, text="Stand", command=stand_player, state="disabled", fg="purple")
-play_again_button = tk.Button(root, text="Play Again", command=play_again, state="disabled", fg="purple")
+start_button = tk.Button(root, text="Start", command=start_game, fg="white", bg="green")
+hit_button = tk.Button(root, text="Hit", command=hit_player, state="disabled", fg="white", bg="red")
+stand_button = tk.Button(root, text="Stand", command=stand_player, state="disabled", fg="white", bg="blue")
+play_again_button = tk.Button(root, text="Play Again", command=play_again, state="disabled", fg="white", bg="blue")
 
-# Position the game labels and buttons
+# Position the game labels
 player_label.grid(row=0, column=0)
 dealer_label.grid(row=1, column=0)
 message_label.grid(row=2, column=0)
 player_hand_label.grid(row=0, column=1)
 dealer_hand_label.grid(row=1, column=1)
+player_wins_label.grid(row=5, column=0)
+dealer_wins_label.grid(row=5, column=2)
 
+# Position the game buttons
 start_button.grid(row=3, column=0)
 hit_button.grid(row=3, column=1)
 stand_button.grid(row=3, column=2)
-play_again_button.grid(row=4, column=0, columnspan=1)
+play_again_button.grid(row=4, column=0)
+
 
 # Start the GUI
 root.mainloop()
