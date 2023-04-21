@@ -1,5 +1,6 @@
 import random
 import tkinter as tk
+import pygame
 
 # Define card values
 card_values = {
@@ -24,6 +25,14 @@ card_suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
 # Define the game variables
 player_score = 0
 dealer_score = 0
+pygame.init()
+pygame.mixer.init()
+deal_sound = pygame.mixer.Sound('audio/deal-sound.mp3')
+deal_sound.set_volume(0.15)
+win_sound = pygame.mixer.Sound('audio/win-sound.wav')
+win_sound.set_volume(0.15)
+lose_sound = pygame.mixer.Sound('audio/lose-sound.mp3')
+lose_sound.set_volume(0.15)
 
 # Define the game functions
 def shuffle_deck():
@@ -46,6 +55,7 @@ def deal_card(hand):
         shuffle_deck()
     card = deck.pop()
     hand.append(card)
+    deal_sound.play()
     return card
 
 def calculate_hand(hand):
@@ -136,12 +146,14 @@ def start_game():
         hit_button.config(state="disabled")
         stand_button.config(state="disabled")
         message_label.config(text="You got Blackjack! You win!")
+        win_sound.play()
     elif player_score > 21:
         hit_button.config(state="disabled")
         stand_button.config(state="disabled")
         dealer_score = calculate_hand(dealer_hand)
         dealer_label.config(text="Dealer: {}".format(dealer_score))
         message_label.config(text="You bust! Dealer wins!")
+        lose_sound.play()
 
 def hit_player():
     global player_hand, player_score
@@ -155,10 +167,12 @@ def hit_player():
         if player_score == 21:
             message_label.config(text="You got Blackjack! You win!")
             dealer_turn()
+            win_sound.play()
         elif player_score > 21:
             dealer_score = calculate_hand(dealer_hand)
             dealer_label.config(text="Dealer: {}".format(dealer_score))
             message_label.config(text="You bust! Dealer wins!")
+            lose_sound.play()
             if dealer_score < 17:
                 dealer_turn()
 
@@ -187,12 +201,16 @@ def finish_dealer_turn():
     dealer_label.config(text="Dealer: {}".format(dealer_score))  # Update the dealer's score label
     if dealer_score > 21:
         message_label.config(text="Dealer busts! You win!")
+        win_sound.play()
     elif dealer_score > player_score:
         message_label.config(text="Dealer wins!")
+        lose_sound.play()
     elif dealer_score < player_score:
         message_label.config(text="You win!")
+        win_sound.play()
     else:
-        message_label.config(text="(Tie) Dealer Wins")
+        message_label.config(text="(Tie/Lose) Dealer Wins")
+        lose_sound.play()
     play_again_button.config(state="normal")
 
 def play_again():
